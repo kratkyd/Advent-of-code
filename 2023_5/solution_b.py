@@ -1,51 +1,70 @@
+#!/usr/bin/env python3
+#correct!!!!!!!
 import re
 
-#solution would technically work, but would take a million years, let's try in c++
-
 def get_seeds(lines):
-    seeds = re.findall("[0-9]+", lines[0])
-    return [int(x) for x in seeds]
+    ret = []
+    num = 0
+    nums = re.findall("[0-9]+", lines[0])
+    for i in enumerate([int(x) for x in nums]): 
+        if(i[0]%2==0):
+            num = int(i[1])
+        else:
+            ret.append((num, num+int(i[1])-1))
+    return ret
 
-def get_destination(lines, source_value, source_type):
-    destination_index = 0
+def get_map_lines(lines, source_type):
+    index = 0
+    ret = []
     for line in enumerate(lines):
         words = re.findall("[a-z]+", line[1])
-        if len(words) != 0 and words[0] == source_type:
-            destination_index = line[0]
-            break
-    for i in range(destination_index+1, len(lines)):
-        if (lines[i][0] == "\n" or len(lines[i]) == 0):
-            return source_value
-        else:
-            source_range_start = int(re.findall("[0-9]+", lines[i])[1])
-            source_range_end = source_range_start + int(re.findall("[0-9]+", lines[i])[2])-1
-            destination_range_start = int(re.findall("[0-9]+", lines[i])[0])
-            if (source_value >= source_range_start and source_value <= source_range_end):
-                return destination_range_start+(source_value - source_range_start)
-    return source_value
+        if(len(words) != 0 and words[0] == source_type):
+           index = line[0]
+           break
+    for i in range(index+1, len(lines)):
+           if(lines[i][0] == "\n" or len(lines[i]) == 0):
+               break
+           else:
+               arr = []
+               for i in re.findall("[0-9]+", lines[i]):
+                   arr.append(int(i))
+               ret.append(arr)
+    return ret
 
-def get_location_from_seed(lines, seed_num):
-    soil_num = get_destination(lines, seed_num, "seed")
-    fertilizer_num = get_destination(lines, soil_num, "soil")
-    water_num = get_destination(lines, fertilizer_num, "fertilizer")
-    light_num = get_destination(lines, water_num, "water")
-    temperature_num = get_destination(lines, light_num, "light")
-    humidity_num = get_destination(lines, temperature_num, "temperature")
-    location_num = get_destination(lines, humidity_num, "humidity")
-    return location_num
+def get_destination(lines, source_tuples, source_type):
 
-def get_lowest_soil(lines):
-    seeds = get_seeds(lines)
-    lowest = get_location_from_seed(lines, seeds[0])
-    for i in range(0, len(seeds), 2):
-        for j in range(seeds[i], seeds[i]+seeds[i+1]):
-            location_num = get_location_from_seed(lines, j)
-            if location_num < lowest:
-                lowest = location_num
-    return lowest
+    map_lines = get_map_lines(lines, source_type)
+    ret = []
+    for i in map_lines:
+        for j in enumerate(source_tuples):
+            val = (0,0)
+            if (j[1][0] < i[1]+i[2]) and (j[1][1] >= i[1]) and j[1] != (0,0):
+                ret.append(((max(j[1][0],i[1])+i[0]-i[1]),min(j[1][1],i[1]+i[2]-1)+i[0]-i[1]))
+                if(j[1][0]<i[1]):
+                    source_tuples.append((j[1][0],i[1]-1))
+                if(j[1][1]>i[1]+i[2]-1):
+                    source_tuples.append((i[1]+i[2],j[1][1]))
+                source_tuples[j[0]] = (0,0)
+    source_tuples = [x for x in source_tuples if x != (0,0)]
+    ret = ret + source_tuples
+    return ret
+
+def get_lowest_location_from_seeds(lines):
+    soils = get_destination(lines, get_seeds(lines), "seed")
+
+    fertilizers = get_destination(lines, soils, "soil")
+
+    waters = get_destination(lines, fertilizers, "fertilizer")
+
+    lights = get_destination(lines, waters, "water")
+    temperatures = get_destination(lines, lights, "light")
+    humidities = get_destination(lines, temperatures, "temperature")
+    locations = get_destination(lines, humidities, "humidity")
+    return sorted(locations)[0][0]
 
 if __name__ == "__main__":
     f = open("file.txt", "r")
     lines = f.readlines()
 
-    print(get_lowest_soil(lines))
+    #print(get_destination(lines, get_seeds(lines), "seed"))
+    print(get_lowest_location_from_seeds(lines))

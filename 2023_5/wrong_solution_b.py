@@ -1,5 +1,6 @@
 import re
 
+#solution would technically work, but would take a million years, let's try in c++
 
 def get_seeds(lines):
     seeds = re.findall("[0-9]+", lines[0])
@@ -23,19 +24,25 @@ def get_destination(lines, source_value, source_type):
                 return destination_range_start+(source_value - source_range_start)
     return source_value
 
+def get_location_from_seed(lines, seed_num):
+    soil_num = get_destination(lines, seed_num, "seed")
+    fertilizer_num = get_destination(lines, soil_num, "soil")
+    water_num = get_destination(lines, fertilizer_num, "fertilizer")
+    light_num = get_destination(lines, water_num, "water")
+    temperature_num = get_destination(lines, light_num, "light")
+    humidity_num = get_destination(lines, temperature_num, "temperature")
+    location_num = get_destination(lines, humidity_num, "humidity")
+    return location_num
+
 def get_lowest_soil(lines):
-    locations = []
     seeds = get_seeds(lines)
-    for seed_num in seeds:
-       soil_num = get_destination(lines, seed_num, "seed")
-       fertilizer_num = get_destination(lines, soil_num, "soil")
-       water_num = get_destination(lines, fertilizer_num, "fertilizer")
-       light_num = get_destination(lines, water_num, "water")
-       temperature_num = get_destination(lines, light_num, "light")
-       humidity_num = get_destination(lines, temperature_num, "temperature")
-       location_num = get_destination(lines, humidity_num, "humidity")
-       locations.append(location_num)
-    return min(locations)
+    lowest = get_location_from_seed(lines, seeds[0])
+    for i in range(0, len(seeds), 2):
+        for j in range(seeds[i], seeds[i]+seeds[i+1]):
+            location_num = get_location_from_seed(lines, j)
+            if location_num < lowest:
+                lowest = location_num
+    return lowest
 
 if __name__ == "__main__":
     f = open("file.txt", "r")
