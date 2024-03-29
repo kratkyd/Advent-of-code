@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 
-cards = ['2','3','4','5','6','7','8','9','T','J','Q','K','A']
+cards = ['J','2','3','4','5','6','7','8','9','T','Q','K','A']
 
 def determine_priority(hand): #0 for high card, 6 for five of a kind, hand is 5 chars
     sorted_hand = "_"+"".join(sorted(hand))+"_"
@@ -10,19 +10,20 @@ def determine_priority(hand): #0 for high card, 6 for five of a kind, hand is 5 
     fours = len(re.findall(r'(?=(.)(?!\1)(.)\2\2\2(?!\2))',sorted_hand))
     threes = len(re.findall(r'(?=(.)(?!\1)(.)\2\2(?!\2))',sorted_hand))
     twos = len(re.findall(r'(?=(.)(?!\1)(.)\2(?!\2))',sorted_hand))
+    j_num = len(re.findall(r'J', sorted_hand))
 
-    if fives>0:
+    if fives>0 or (fours>0 and j_num==1) or (threes>0 and j_num==2) or (twos>0 and j_num==3) or (j_num>3):
         return 6
-    elif fours>0:
+    elif fours>0 or (threes>0 and j_num==1) or (twos>1 and j_num==2) or (j_num==3):
         return 5
-    elif threes>0:
-         if twos>0:
+    elif threes>0 or (twos>0 and j_num==1) or (j_num==2):
+         if (twos==1 and j_num==0) or (twos==2 and j_num==1):
             return 4
          else:
             return 3
     elif twos==2:
          return 2
-    elif twos==1:
+    elif twos==1 or (j_num==1):
          return 1
     else:
          return 0
@@ -63,6 +64,7 @@ def quicksort_hands(hands, low, high):
 def total(hands):
     res = 0
     quicksort_hands(hands, 0, len(hands)-1)
+    print(hands)
     for hand in enumerate(hands):
         res += (hand[0]+1)*hand[1][1]
     return res
@@ -72,3 +74,6 @@ if __name__ == "__main__":
     lines = f.readlines()
     hands = [((re.findall("[A-Z0-9]+", x))[0], int((re.findall("[A-Z0-9]+", x))[1])) for x in lines]
     print(total(hands))
+    print(is_hand_better("KKJKJ",""))
+    #for line in lines:
+#        print(determine_priority(re.search(r'[^ ]+',line)[0]))
